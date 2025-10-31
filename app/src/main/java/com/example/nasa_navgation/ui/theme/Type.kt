@@ -33,13 +33,9 @@ val Typography = Typography(
     */
 )
 
-/**
- * 自定義文字樣式
- */
+// 自定義文字樣式
 object AppTypography {
-    /**
-     * 首頁相關文字樣式
-     */
+    // 首頁相關文字樣式
     object Home {
         val appNameTextSize = 24.sp  // 首頁應用程式名稱文字大小
     }
