@@ -49,6 +49,20 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    
+    // 網路請求（只使用 OkHttp，使用 Android 原生的 JSONObject 解析 JSON）
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
+    
+    // 圖片載入
+    implementation(libs.coil.compose)
+    
+    // ViewModel
+    implementation(libs.lifecycle.viewmodel.compose)
+    
+    // Coroutines
+    implementation(libs.kotlinx.coroutines.android)
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
