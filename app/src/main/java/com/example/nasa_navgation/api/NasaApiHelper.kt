@@ -1,7 +1,7 @@
 package com.example.nasa_navgation.api
 
-import android.util.Log
 import com.example.nasa_navgation.Constants
+import com.example.nasa_navgation.Logger
 import com.example.nasa_navgation.model.ApodResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -25,8 +25,6 @@ import java.util.concurrent.TimeUnit
 // - 智能回退：如果今天沒有圖片，自動嘗試獲取昨天的圖片
 // - 完整的錯誤處理和日誌記錄
 object NasaApiHelper {
-    // NASA APOD API 的基礎 URL
-    private const val BASE_URL = "https://api.nasa.gov/planetary/apod"
     
     // OkHttp 客戶端實例
     // 配置了連接、讀取、寫入的超時時間，確保網路請求不會無限等待
@@ -52,20 +50,20 @@ object NasaApiHelper {
     // 確保網路請求在 IO 執行緒中進行，不會阻塞 UI 執行緒
     suspend fun getTodayApod(): Result<ApodResponse> = withContext(Dispatchers.IO) {
         try {
-            // 構建 API URL，不指定日期讓 API 返回今天的圖片
-            val url = "$BASE_URL?api_key=${Constants.API.NASA_API_KEY}"
+            val apod_Url = "${Constants.API.BASE_URL}?api_key=${Constants.API.NASA_API_KEY}"
             
-            Log.d("NasaApiHelper", "嘗試獲取今日圖片，請求 URL: $url")
-            
-            // 創建 HTTP 請求
-            val request = Request.Builder()
-                .url(url)
+            Logger.log("嘗試獲取今日圖片，請求 URL: $apod_Url", tag = "NasaApiHelper")
+
+            val apod_request = Request.Builder()
+                .url(apod_Url)
                 .build()
             
             // 執行請求並使用 use{} 確保資源正確關閉
-            client.newCall(request).execute().use { response ->
+            client.newCall(apod_request).execute().use { response ->
+
                 val responseBody = response.body?.string() ?: ""
-                Log.d("NasaApiHelper", "回應狀態碼: ${response.code}")
+
+                Logger.log("回應狀態碼: ${response.code}", tag = "NasaApiHelper")
                 
                 // 檢查請求是否成功且回應內容不為空
                 if (response.isSuccessful && responseBody.isNotEmpty()) {
@@ -75,34 +73,34 @@ object NasaApiHelper {
                         // 檢查 JSON 中是否包含錯誤訊息
                         // NASA API 會在 JSON 中返回錯誤訊息，而不是使用 HTTP 錯誤碼
                         if (jsonObject.has("error")) {
-                            val errorMessage = jsonObject.optString("error", "未知錯誤")
-                            Log.w("NasaApiHelper", "今天沒有圖片: $errorMessage，嘗試獲取最近的圖片")
+                            val errorMessage = jsonObject.optString("error", Constants.Text.UNKNOWN_ERROR)
+                            Logger.log("今天沒有圖片: $errorMessage，嘗試獲取最近的圖片", tag = "NasaApiHelper")
                             // 智能回退：嘗試獲取昨天的圖片
                             return@use getApodByDate(getYesterdayDate())
                         }
                         
                         // 成功獲取資料，解析 JSON 為 ApodResponse
                         val apod = parseApodResponse(jsonObject)
-                        Log.d("NasaApiHelper", "成功獲取今日圖片: ${apod.title} (${apod.date})")
+                        Logger.log("成功獲取今日圖片: ${apod.title} (${apod.date})", tag = "NasaApiHelper")
                         Result.success(apod)
                     } catch (e: Exception) {
                         // JSON 解析過程中的異常
-                        Log.e("NasaApiHelper", "JSON 解析錯誤", e)
-                        Result.failure(IOException("JSON 解析錯誤: ${e.message}", e))
+                        Logger.log("${Constants.Text.JSON_PARSE_ERROR}: ${e.message}", tag = "NasaApiHelper")
+                        Result.failure(IOException("${Constants.Text.JSON_PARSE_ERROR}: ${e.message}", e))
                     }
                 } else {
                     // HTTP 請求失敗或回應為空，嘗試獲取昨天的圖片
-                    Log.w("NasaApiHelper", "無法獲取今日圖片，嘗試獲取最近的圖片")
+                    Logger.log("無法獲取今日圖片，嘗試獲取最近的圖片", tag = "NasaApiHelper")
                     return@use getApodByDate(getYesterdayDate())
                 }
-            } ?: Result.failure(IOException("無法執行請求"))
+            }
         } catch (e: IOException) {
             // 網路相關異常（連接失敗、超時等）
-            Log.e("NasaApiHelper", "網路請求錯誤", e)
-            Result.failure(IOException("網路請求失敗: ${e.message}", e))
+            Logger.log("${Constants.Text.NETWORK_REQUEST_FAILED}: ${e.message}", tag = "NasaApiHelper")
+            Result.failure(IOException("${Constants.Text.NETWORK_REQUEST_FAILED}: ${e.message}", e))
         } catch (e: Exception) {
             // 其他未知異常
-            Log.e("NasaApiHelper", "未知錯誤", e)
+            Logger.log("${Constants.Text.UNKNOWN_ERROR}: ${e.message}", tag = "NasaApiHelper")
             Result.failure(e)
         }
     }
@@ -118,7 +116,7 @@ object NasaApiHelper {
         calendar.add(java.util.Calendar.DAY_OF_MONTH, -1)
         
         // 使用 SimpleDateFormat 格式化日期為 YYYY-MM-DD 格式
-        return SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.time)
+        return SimpleDateFormat(Constants.API.DATE_FORMAT, Locale.getDefault()).format(calendar.time)
     }
     
     // 獲取指定日期的 APOD 資料（私有方法）
@@ -139,8 +137,8 @@ object NasaApiHelper {
     private suspend fun getApodByDate(date: String): Result<ApodResponse> = withContext(Dispatchers.IO) {
         try {
             // 構建包含日期參數的 URL
-            val url = "$BASE_URL?api_key=${Constants.API.NASA_API_KEY}&date=$date"
-            Log.d("NasaApiHelper", "嘗試獲取日期 $date 的圖片，URL: $url")
+            val url = "${Constants.API.BASE_URL}?api_key=${Constants.API.NASA_API_KEY}&date=$date"
+            Logger.log("嘗試獲取日期 $date 的圖片，URL: $url", tag = "NasaApiHelper")
             
             // 創建 HTTP 請求
             val request = Request.Builder()
@@ -158,31 +156,32 @@ object NasaApiHelper {
                         
                         // 檢查 API 返回的錯誤訊息
                         if (jsonObject.has("error")) {
-                            val errorMessage = jsonObject.optString("error", "未知錯誤")
-                            Log.w("NasaApiHelper", "日期 $date 沒有圖片: $errorMessage")
-                            return@use Result.failure(IOException("該日期沒有圖片: $errorMessage"))
+                            val errorMessage = jsonObject.optString("error", Constants.Text.UNKNOWN_ERROR)
+                            Logger.log("日期 $date 沒有圖片: $errorMessage", tag = "NasaApiHelper")
+                            return@use Result.failure(IOException("${Constants.Text.NO_IMAGE_FOR_DATE}: $errorMessage"))
                         }
                         
                         // 成功解析資料
                         val apod = parseApodResponse(jsonObject)
-                        Log.d("NasaApiHelper", "成功獲取日期 $date 的圖片: ${apod.title}")
+
+                        Logger.log("成功獲取日期 ${apod.date} 的圖片: ${apod.title}", tag = "NasaApiHelper")
                         Result.success(apod)
                     } catch (e: Exception) {
                         // JSON 解析異常
-                        Log.e("NasaApiHelper", "JSON 解析錯誤", e)
-                        Result.failure(IOException("JSON 解析錯誤: ${e.message}", e))
+                        Logger.log("${Constants.Text.JSON_PARSE_ERROR}: ${e.message}", tag = "NasaApiHelper")
+                        Result.failure(IOException("${Constants.Text.JSON_PARSE_ERROR}: ${e.message}", e))
                     }
                 } else {
                     // HTTP 請求失敗
-                    Log.e("NasaApiHelper", "HTTP 錯誤: ${response.code} - ${response.message}")
+                    Logger.log("${Constants.Text.HTTP_ERROR}: ${response.code} - ${response.message}", tag = "NasaApiHelper")
                     Result.failure(
-                        IOException("HTTP ${response.code}: ${response.message}")
+                        IOException("${Constants.Text.HTTP_ERROR} ${response.code}: ${response.message}")
                     )
                 }
-            } ?: Result.failure(IOException("無法執行請求"))
+            } ?: Result.failure(IOException(Constants.Text.CANNOT_EXECUTE_REQUEST))
         } catch (e: Exception) {
             // 其他異常（網路異常、格式錯誤等）
-            Log.e("NasaApiHelper", "請求錯誤", e)
+            Logger.log("${Constants.Text.CANNOT_EXECUTE_REQUEST}: ${e.message}", tag = "NasaApiHelper")
             Result.failure(e)
         }
     }

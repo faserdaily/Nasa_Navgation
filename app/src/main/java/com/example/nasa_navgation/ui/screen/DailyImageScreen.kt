@@ -22,6 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.nasa_navgation.Constants
 import coil.compose.AsyncImage
 import com.example.nasa_navgation.ui.theme.AppTypography
 import com.example.nasa_navgation.ui.theme.Nasa_NavgationTheme
@@ -84,7 +85,7 @@ fun DailyImageScreen(
                 // 圖片日期
                 Text(
                     text = state.apod.date,
-                    fontSize = 16.sp,
+                    fontSize = Constants.UIValues.TEXT_SIZE_MEDIUM.sp,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -96,14 +97,14 @@ fun DailyImageScreen(
                     contentDescription = state.apod.title,  // 無障礙描述
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(4f / 3f),  // 4:3 的長寬比
+                        .aspectRatio(Constants.UIValues.IMAGE_ASPECT_RATIO_4_3),  // 4:3 的長寬比
                     contentScale = ContentScale.Fit  // 保持比例，適應容器
                 )
                 
                 // 詳細說明文字
                 Text(
                     text = state.apod.explanation,
-                    fontSize = 14.sp,
+                    fontSize = Constants.UIValues.TEXT_SIZE_SMALL.sp,
                     textAlign = TextAlign.Justify,  // 兩端對齊
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -122,14 +123,14 @@ fun DailyImageScreen(
                 ) {
                     // 錯誤標題
                     Text(
-                        text = "載入失敗",
+                        text = Constants.Text.LOAD_FAILED,
                         fontSize = AppTypography.Home.appNameTextSize,
                         fontWeight = FontWeight.Bold
                     )
                     // 具體錯誤訊息
                     Text(
                         text = state.message,
-                        fontSize = 14.sp,
+                        fontSize = Constants.UIValues.TEXT_SIZE_SMALL.sp,
                         textAlign = TextAlign.Center
                     )
                 }

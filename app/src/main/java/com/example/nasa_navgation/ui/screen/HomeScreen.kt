@@ -3,6 +3,7 @@ package com.example.nasa_navgation.ui.screen
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,6 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.sp
 import com.example.nasa_navgation.Constants
 import com.example.nasa_navgation.Navigator
 import com.example.nasa_navgation.ui.theme.AppTypography
@@ -35,32 +37,46 @@ fun HomeScreen(modifier: Modifier = Modifier) {
     // 獲取當前的 Context，用於導航等操作
     val context = LocalContext.current
     
-    // 使用 Column 垂直排列子元素
-    Column(
-        modifier = modifier.fillMaxSize(),                    // 填滿整個可用空間
-        horizontalAlignment = Alignment.CenterHorizontally,  // 水平居中
-        verticalArrangement = Arrangement.Center             // 垂直居中
+    // 使用 Box 來疊加元素，以便在右下角放置提示文字
+    Box(
+        modifier = modifier.fillMaxSize()  // 填滿整個可用空間
     ) {
-        // NASA Logo 圖片
-        Image(
-            painter = painterResource(id = Constants.Images.NASA_LOGO),
-            contentDescription = Constants.Images.NASA_LOGO_DESCRIPTION,  // 無障礙描述
-            modifier = Modifier
-                .fillMaxWidth(Constants.UI.IMAGE_WIDTH_RATIO)
-                .aspectRatio(Constants.UI.IMAGE_ASPECT_RATIO)
-                .clickable {  // 添加點擊事件
-                    // 點擊後導航到每日圖片頁面
-                    Navigator.navigateToDailyImage(context)
-                },
-            contentScale = ContentScale.Fit  // 保持圖片比例，適應容器大小
-        )
+        // 使用 Column 垂直排列主要元素
+        Column(
+            modifier = Modifier.fillMaxSize(),                    // 填滿整個可用空間
+            horizontalAlignment = Alignment.CenterHorizontally,  // 水平居中
+            verticalArrangement = Arrangement.Center             // 垂直居中
+        ) {
+            // NASA Logo 圖片
+            Image(
+                painter = painterResource(id = Constants.Images.NASA_LOGO),
+                contentDescription = Constants.Images.NASA_LOGO_DESCRIPTION,  // 無障礙描述
+                modifier = Modifier
+                    .fillMaxWidth(Constants.UI.IMAGE_WIDTH_RATIO)
+                    .aspectRatio(Constants.UI.IMAGE_ASPECT_RATIO)
+                    .clickable {  // 添加點擊事件
+                        // 點擊後導航到每日圖片頁面
+                        Navigator.navigateToDailyImage(context)
+                    },
+                contentScale = ContentScale.Fit  // 保持圖片比例，適應容器大小
+            )
+            
+            // 應用程式名稱文字
+            Text(
+                text = Constants.Text.APP_NAME,
+                fontSize = AppTypography.Home.appNameTextSize,   // 使用主題中定義的文字大小
+                textAlign = TextAlign.Center,                    // 文字居中對齊
+                modifier = Modifier.padding(top = Spacing.Home.textTopPadding)  // 添加上邊距
+            )
+        }
         
-        // 應用程式名稱文字
+        // 右下角的提示文字
         Text(
-            text = Constants.Text.APP_NAME,
-            fontSize = AppTypography.Home.appNameTextSize,   // 使用主題中定義的文字大小
-            textAlign = TextAlign.Center,                    // 文字居中對齊
-            modifier = Modifier.padding(top = Spacing.Home.textTopPadding)  // 添加上邊距
+            text = Constants.Text.HIT_IMAGE_TO_CONTINUE,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)  // 對齊到右下角
+                .padding(Spacing.medium),   // 添加內邊距
+            fontSize = Constants.UIValues.TEXT_SIZE_SMALL.sp
         )
     }
 }
