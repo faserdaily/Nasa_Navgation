@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
-import com.example.nasa_navgation.ui.DailyImageScreen
+import com.example.nasa_navgation.ui.screen.DailyImageScreen
 import com.example.nasa_navgation.ui.theme.Nasa_NavgationTheme
 
 // 每日推薦圖片 Activity
